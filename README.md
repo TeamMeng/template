@@ -79,3 +79,10 @@ cargo nextest 是一个 Rust 增强测试工具。
 ```bash
 cargo install cargo-nextest --locked
 ```
+
+### 安装 cargo audit
+cargo audit 是一个 Rust 检查已知的漏洞安全和依赖安全的工具
+
+```bash
+cargo install cargo-audit
+```
