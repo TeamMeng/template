@@ -1,2 +1,3 @@
 [template]
-exclude = ["cliff.toml"]
+exclude = ["cliff.toml", ".github/workflows/build.yml"]
+ignore = ["CHANGELOG.md", "Cargo.lock"]
