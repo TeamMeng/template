@@ -26,10 +26,9 @@ jobs:
   build-rust:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          submodules: recursive
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -42,7 +41,7 @@ jobs:
       - name: Install tools
         uses: taiki-e/install-action@v2
         with:
-          tools: nextest, cargo-deny, typos-cli
+          tool: cargo-deny,cargo-nextest,typos
       - uses: Swatinem/rust-cache@v2
       - name: Check typos
         run: typos
@@ -64,7 +63,7 @@ jobs:
         env:
           OUTPUT: CHANGES.md
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/')
         with:
           body: ${{ steps.git-cliff.outputs.content }}
