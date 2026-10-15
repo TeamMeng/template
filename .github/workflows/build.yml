@@ -34,6 +34,11 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+      - name: Normalize template placeholders
+        if: github.repository == 'TeamMeng/template'
+        run: |
+          sed -i 's/{{project-name}}/template/g' Cargo.toml cliff.toml
+          cargo generate-lockfile
       - name: Install tools
         uses: taiki-e/install-action@v2
         with:
