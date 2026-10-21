@@ -22,6 +22,8 @@ allow = [
   "CC0-1.0",
   "CDLA-Permissive-2.0",
 ]
+# 允许声明但当前未被依赖使用的许可证
+unused-allowed-license = "allow"
 confidence-threshold = 0.8
 
 [licenses.private]
