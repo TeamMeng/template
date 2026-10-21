@@ -76,12 +76,13 @@ cargo run
 | `scripts/cargo-hook.sh` | pre-commit 在模板仓库中跳过 cargo 检查 |
 | `cliff.toml` | git-cliff 配置 |
 | `deny.toml` | cargo-deny 配置 |
-| `.github/workflows/build.yml` | CI 与 Release |
+| `.github/workflows/build.yml` | CI 与 Release（复制到生成项目） |
+| `.github/workflows/generate.yml` | 模板仓库专用的生成产物校验 |
 
 ## CI 与发布
 
 - push 到 `main` / PR：`typos`、`cargo deny check`、`cargo fmt --check`、`clippy`、`nextest`
-- 生成产物：`cargo generate` 后在产物中执行 `cargo fmt --check`、`clippy`、`nextest`
+- 模板仓库额外校验（`generate.yml`）：`cargo generate` 后在产物中执行 `cargo fmt --check`、`clippy`、`nextest`；该 workflow 不会进入生成项目
 - push tag `v*`：创建 GitHub Release，正文由 `git-cliff` 生成
 - 提交信息需遵循 Conventional Commits
 
