@@ -4,5 +4,9 @@ cargo_generate_version = ">=0.20.0"
 # - build.yml relies on GitHub's own `${{ }}` expression syntax
 # - cargo-hook.sh matches the literal `{{project-name}}` placeholder text
 exclude = [".github/workflows/build.yml", "scripts/cargo-hook.sh"]
-# Kept out of generated projects (template bookkeeping only):
-ignore = ["CHANGELOG.md", "Cargo.lock"]
+# Kept out of generated projects:
+# - CHANGELOG.md / Cargo.lock are template bookkeeping
+# - generate.yml only makes sense here: generated projects have no
+#   cargo-generate.toml, so a self-generation job would fail to render
+#   build.yml (`${{ }}`) and cliff.toml (git-cliff's Tera syntax)
+ignore = [".github/workflows/generate.yml", "CHANGELOG.md", "Cargo.lock"]

@@ -1,0 +1,53 @@
+name: generate
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Install tools
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest,cargo-generate
+      - name: Generate project from template
+        run: |
+          mkdir -p "$RUNNER_TEMP/generated"
+          cargo generate --path . --name smoke --define authors=CI \
+            --destination "$RUNNER_TEMP/generated" --silent
+          test -f "$RUNNER_TEMP/generated/smoke/Cargo.toml"
+          ! grep -Eq '\{\{(project-name|authors)\}\}' \
+            "$RUNNER_TEMP/generated/smoke/Cargo.toml" \
+            "$RUNNER_TEMP/generated/smoke/cliff.toml"
+          test ! -e "$RUNNER_TEMP/generated/smoke/Cargo.lock"
+          test ! -e "$RUNNER_TEMP/generated/smoke/.github/workflows/generate.yml"
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "${{ runner.temp }}/generated/smoke -> target"
+      - name: Verify generated project
+        working-directory: ${{ runner.temp }}/generated/smoke
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --workspace --all-targets --all-features -- -D warnings
+          cargo nextest run --workspace --all-features
