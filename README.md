@@ -1,62 +1,90 @@
 # {{project-name}}
 
-## 环境设置
+Rust 项目模板：edition 2024、anyhow + tracing、严格 lint、pre-commit 与完整 CI。
 
-### 安装 Rust
+## 特性
 
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
+- Rust 2024，默认启用 `anyhow` 错误处理与 `tracing` 日志
+- `rustfmt` / `clippy` 全量检查，clippy 以 `-D warnings` 运行
+- `typos` 拼写检查、`cargo-deny` 依赖与许可证审计、`cargo-nextest` 测试
+- pre-commit 钩子，提交前执行与 CI 一致的检查
+- Conventional Commits + `git-cliff` 生成 Changelog
+- GitHub Actions：PR/main 校验，tag 自动发布 Release
 
-### 安装开发工具
+## 环境要求
 
-- `cargo-generate`：使用 GitHub 仓库模板生成新项目
-- `cargo-deny`：依赖安全、许可证与来源检查
-- `typos-cli`：源码拼写检查
-- `git-cliff`：基于 Conventional Commits 生成 Changelog
-- `cargo-nextest`：Rust 增强测试运行器
+- Rust stable，且不低于 1.85（edition 2024 的最低版本）
+- 以下工具（CI 中自动安装）：
+
+| 工具 | 用途 |
+| --- | --- |
+| `cargo-generate` | 从模板生成项目 |
+| `cargo-deny` | 依赖安全、许可证与来源检查 |
+| `typos-cli` | 源码拼写检查 |
+| `git-cliff` | 根据 Conventional Commits 生成 Changelog |
+| `cargo-nextest` | 测试运行器 |
 
 ```bash
 cargo install --locked cargo-generate cargo-deny typos-cli git-cliff cargo-nextest
 ```
 
-（如果已安装 [`cargo-binstall`](https://github.com/cargo-bins/cargo-binstall)，可直接免编译安装：`cargo binstall -y cargo-generate cargo-deny typos-cli git-cliff cargo-nextest`）
-
-### 使用模板创建新项目
+可选：安装 [`cargo-binstall`](https://github.com/cargo-bins/cargo-binstall) 后免编译安装：
 
 ```bash
-cargo generate TeamMeng/template
+cargo binstall -y cargo-generate cargo-deny typos-cli git-cliff cargo-nextest
 ```
 
-### 安装并启用 pre-commit
+### pre-commit（可选）
 
 ```bash
 pipx install pre-commit
 pre-commit install
 ```
 
-## 常用命令
+## 快速开始
 
 ```bash
-# 代码格式化
-cargo fmt --all
-
-# 静态检查（typos + cargo-deny + fmt + clippy）
-typos
-cargo deny check
-cargo fmt --all -- --check
-cargo lint   # = clippy --workspace --all-targets --all-features -- -D warnings
-
-# 运行测试（cargo-nextest）
-cargo nt     # = nextest run --workspace --all-features
-
-# 运行全量检查与测试（与 CI 顺序一致）
-typos && cargo deny check && cargo fmt --all -- --check && cargo lint && cargo nt
-
-# 生成 CHANGELOG.md
-git-cliff -o CHANGELOG.md
+cargo generate TeamMeng/template
+cd <project-name>
+cargo run
 ```
 
-`cargo lint` 和 `cargo nt` 是 `.cargo/config.toml` 中定义的别名。
+生成过程中填写 `project-name` 与 `authors` 两个变量，分别对应 crate 名和 `Cargo.toml` 的 authors 字段。
 
-模板仓库本身仍带有 `{{project-name}}` 占位符，cargo 命令需在 `cargo generate` 生成的项目中执行；CI 会先归一化占位符再运行上述检查。
+## 开发命令
+
+| 目的 | 命令 |
+| --- | --- |
+| 格式化 | `cargo fmt --all` |
+| 拼写检查 | `typos` |
+| 依赖审计 | `cargo deny check` |
+| 格式校验 | `cargo fmt --all -- --check` |
+| Clippy | `cargo lint`（等价于 `clippy --workspace --all-targets --all-features -- -D warnings`） |
+| 测试 | `cargo nt`（等价于 `nextest run --workspace --all-features`） |
+| 全量检查 | `typos && cargo deny check && cargo fmt --all -- --check && cargo lint && cargo nt` |
+| 生成 Changelog | `git-cliff -o CHANGELOG.md` |
+
+`cargo lint` 与 `cargo nt` 定义在 `.cargo/config.toml`。
+
+> 模板仓库的 `Cargo.toml` 保留占位符，cargo 命令需在生成后的项目中执行；CI 会先归一化占位符。
+
+## 项目结构
+
+| 路径 | 说明 |
+| --- | --- |
+| `.cargo/config.toml` | cargo 别名 |
+| `scripts/cargo-hook.sh` | pre-commit 在模板仓库中跳过 cargo 检查 |
+| `cliff.toml` | git-cliff 配置 |
+| `deny.toml` | cargo-deny 配置 |
+| `.github/workflows/build.yml` | CI 与 Release |
+
+## CI 与发布
+
+- push 到 `main` / PR：`typos`、`cargo deny check`、`cargo fmt --check`、`clippy`、`nextest`
+- 生成产物：`cargo generate` 后在产物中执行 `cargo fmt --check`、`clippy`、`nextest`
+- push tag `v*`：创建 GitHub Release，正文由 `git-cliff` 生成
+- 提交信息需遵循 Conventional Commits
+
+## License
+
+MIT，见 [LICENSE](LICENSE)。
