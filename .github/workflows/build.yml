@@ -11,7 +11,7 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -51,10 +51,56 @@ jobs:
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
       - name: Execute rust tests
         run: cargo nextest run --workspace --all-features
+
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Install tools
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+      - name: Install cargo-generate
+        run: cargo install --locked cargo-generate
+      - name: Generate project from template
+        run: |
+          cargo generate --path . --name smoke --define authors=CI \
+            --destination "$RUNNER_TEMP/generated" --silent
+          test -f "$RUNNER_TEMP/generated/smoke/Cargo.toml"
+          ! grep -Eq '\{\{(project-name|authors)\}\}' \
+            "$RUNNER_TEMP/generated/smoke/Cargo.toml" \
+            "$RUNNER_TEMP/generated/smoke/cliff.toml"
+          test ! -e "$RUNNER_TEMP/generated/smoke/Cargo.lock"
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "$RUNNER_TEMP/generated/smoke -> target"
+      - name: Verify generated project
+        working-directory: ${{ runner.temp }}/generated/smoke
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --workspace --all-targets --all-features -- -D warnings
+          cargo nextest run --workspace --all-features
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build-rust, generate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Normalize template placeholders
+        if: github.repository == 'TeamMeng/template'
+        run: sed -i 's/{{project-name}}/template/g' cliff.toml
       - name: Generate a changelog
         uses: orhun/git-cliff-action@v4
         id: git-cliff
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           config: cliff.toml
           args: -vv --latest --strip header
@@ -62,6 +108,5 @@ jobs:
           OUTPUT: CHANGES.md
       - name: Release
         uses: softprops/action-gh-release@v3
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           body: ${{ steps.git-cliff.outputs.content }}
