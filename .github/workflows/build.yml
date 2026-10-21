@@ -63,11 +63,10 @@ jobs:
       - name: Install tools
         uses: taiki-e/install-action@v2
         with:
-          tool: cargo-nextest
-      - name: Install cargo-generate
-        run: cargo install --locked cargo-generate
+          tool: cargo-nextest,cargo-generate
       - name: Generate project from template
         run: |
+          mkdir -p "$RUNNER_TEMP/generated"
           cargo generate --path . --name smoke --define authors=CI \
             --destination "$RUNNER_TEMP/generated" --silent
           test -f "$RUNNER_TEMP/generated/smoke/Cargo.toml"
@@ -77,7 +76,7 @@ jobs:
           test ! -e "$RUNNER_TEMP/generated/smoke/Cargo.lock"
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: "$RUNNER_TEMP/generated/smoke -> target"
+          workspaces: "${{ runner.temp }}/generated/smoke -> target"
       - name: Verify generated project
         working-directory: ${{ runner.temp }}/generated/smoke
         run: |
