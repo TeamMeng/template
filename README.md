@@ -1,6 +1,6 @@
-# {{project-name}}
+# template
 
-Rust 2024 项目模板，包含 anyhow 错误处理、tracing 日志、Clippy、nextest 和 pre-commit。
+Rust 2024 项目模板，包含 anyhow 错误处理、tracing 日志、Clippy、nextest 和 prek。
 
 ## 快速开始
 
@@ -29,23 +29,26 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo nextest run --workspace --all-features
 ```
 
-## 提交前检查（可选）
+## Git hooks（可选）
 
-先安装 pipx，再执行：
+使用 [prek](https://prek.j178.dev) 管理，配置见 `prek.toml`：
 
 ```bash
-pipx install pre-commit
+brew install prek  # 或 uv tool install prek / cargo binstall prek
 cargo install --locked typos-cli cargo-deny
-pre-commit install
+prek install
 ```
 
-提交时自动检查文件规范、拼写、代码格式、依赖、Clippy 和测试。
+- 提交时：检查文件规范、拼写、代码格式和依赖。
+- 推送时：再次执行上述检查，并运行 Clippy 和测试。
+
 需要已安装上述工具及快速开始中的 `cargo-nextest`。
 
 手动检查全部文件：
 
 ```bash
-pre-commit run --all-files
+prek run --all-files                   # 提交时的检查
+prek run --all-files --stage pre-push  # 全部检查，与 CI 一致
 ```
 
 ## License
