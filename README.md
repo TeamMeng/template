@@ -1,4 +1,4 @@
-# {{project-name}}
+# template
 
 Rust 2024 项目模板，包含 anyhow 错误处理、tracing 日志、Clippy、nextest 和 prek。
 
