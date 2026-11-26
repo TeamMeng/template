@@ -31,26 +31,17 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - name: Normalize template placeholders
-        if: github.repository == 'TeamMeng/template'
-        run: |
-          sed -i 's/{{project-name}}/template/g' Cargo.toml cliff.toml
-          cargo generate-lockfile
       - name: Install tools
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-deny,cargo-nextest,typos
       - uses: Swatinem/rust-cache@v2
-      - name: Check typos
-        run: typos
-      - name: Check dependencies
-        run: cargo deny check
-      - name: Check code format
-        run: cargo fmt --all -- --check
-      - name: Lint rust sources
-        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
-      - name: Execute rust tests
-        run: cargo nextest run --workspace --all-features
+      # Runs every hook in prek.toml: hooks without `stages` also run in the
+      # pre-push stage, so this covers the commit checks plus clippy and tests.
+      - name: Run prek hooks
+        uses: j178/prek-action@v3.1.1
+        with:
+          extra-args: --all-files --stage pre-push
 
   release:
     if: startsWith(github.ref, 'refs/tags/')

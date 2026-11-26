@@ -2,8 +2,7 @@
 cargo_generate_version = ">=0.20.0"
 # Files copied as-is, without Liquid substitution:
 # - build.yml relies on GitHub's own `${{ }}` expression syntax
-# - cargo-hook.sh matches the literal `{{project-name}}` placeholder text
-exclude = [".github/workflows/build.yml", "scripts/cargo-hook.sh"]
+exclude = [".github/workflows/build.yml"]
 # Kept out of generated projects:
 # - CHANGELOG.md / Cargo.lock are template bookkeeping
 # - generate.yml only makes sense here: generated projects have no

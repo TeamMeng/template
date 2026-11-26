@@ -1,0 +1,73 @@
+#:schema https://www.schemastore.org/prek.json
+# Git hooks managed by prek: https://prek.j178.dev
+minimum_prek_version = "0.3.2"
+# `prek install` sets up both Git hooks. Hooks without `stages` run in both,
+# so pre-push re-checks the pushed changes and CI can run every hook with
+# `prek run --all-files --stage pre-push`. A hook that sets `stages` must
+# include pre-push, or CI will skip it.
+default_install_hook_types = ["pre-commit", "pre-push"]
+
+# Rust-native builtin hooks: no clone, no Python, works offline.
+[[repos]]
+repo = "builtin"
+hooks = [
+  { id = "fix-byte-order-marker" },
+  { id = "check-case-conflict" },
+  { id = "check-merge-conflict" },
+  { id = "check-symlinks" },
+  { id = "check-yaml" },
+  { id = "check-toml" },
+  { id = "end-of-file-fixer" },
+  { id = "mixed-line-ending" },
+  { id = "trailing-whitespace" },
+]
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "typos"
+name = "typos"
+description = "Check spelling with typos."
+entry = "typos"
+language = "system"
+pass_filenames = false
+
+[[repos.hooks]]
+id = "cargo-fmt"
+name = "cargo fmt"
+description = "Format files with rustfmt."
+entry = "cargo fmt --all -- --check"
+language = "system"
+files = '(\.rs|(^|/)\.?rustfmt\.toml|^rust-toolchain\.toml)$'
+pass_filenames = false
+
+[[repos.hooks]]
+id = "cargo-deny"
+name = "cargo deny"
+description = "Check cargo dependencies."
+entry = "cargo deny check"
+language = "system"
+files = '(^|/)Cargo\.(toml|lock)$|^deny\.toml$'
+pass_filenames = false
+
+# Slow checks that compile the crate run on push instead of every commit.
+[[repos.hooks]]
+id = "cargo-clippy"
+name = "cargo clippy"
+description = "Lint rust sources."
+entry = "cargo clippy --workspace --all-targets --all-features -- -D warnings"
+language = "system"
+files = '(\.rs|(^|/)Cargo\.(toml|lock)|(^|/)\.?clippy\.toml|^\.cargo/config\.toml|^rust-toolchain\.toml)$'
+pass_filenames = false
+stages = ["pre-push"]
+
+[[repos.hooks]]
+id = "cargo-test"
+name = "cargo nextest"
+description = "Run unit tests with cargo-nextest."
+entry = "cargo nextest run --workspace --all-features"
+language = "system"
+files = '(\.rs|(^|/)Cargo\.(toml|lock)|^\.cargo/config\.toml|^rust-toolchain\.toml)$'
+pass_filenames = false
+stages = ["pre-push"]

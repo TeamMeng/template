@@ -30,7 +30,7 @@ jobs:
       - name: Install tools
         uses: taiki-e/install-action@v2
         with:
-          tool: cargo-nextest,cargo-generate
+          tool: cargo-deny,cargo-nextest,cargo-generate,typos
       - name: Generate project from template
         run: |
           mkdir -p "$RUNNER_TEMP/generated"
@@ -42,12 +42,14 @@ jobs:
             "$RUNNER_TEMP/generated/smoke/cliff.toml"
           test ! -e "$RUNNER_TEMP/generated/smoke/Cargo.lock"
           test ! -e "$RUNNER_TEMP/generated/smoke/.github/workflows/generate.yml"
+          # prek's --all-files only sees tracked files
+          git -C "$RUNNER_TEMP/generated/smoke" add -A
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: "${{ runner.temp }}/generated/smoke -> target"
+      # Same hooks the generated project's own CI runs (see build.yml)
       - name: Verify generated project
-        working-directory: ${{ runner.temp }}/generated/smoke
-        run: |
-          cargo fmt --all -- --check
-          cargo clippy --workspace --all-targets --all-features -- -D warnings
-          cargo nextest run --workspace --all-features
+        uses: j178/prek-action@v3.1.1
+        with:
+          working-directory: ${{ runner.temp }}/generated/smoke
+          extra-args: --all-files --stage pre-push
